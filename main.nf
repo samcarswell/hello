@@ -1,17 +1,31 @@
 #!/usr/bin/env nextflow
 
-cheers = Channel.from 'Bonjour', 'Ciao', 'Hello', 'Hola'
+params.str = 'Hello world!'
 
-process sayHello {
+process splitLetters {
 
-  publishDir '/tmp'
+  publishDir '/tmp/nextflow_out'
 
-  echo true
-  input: 
-    val x from cheers
-  script:
+    output:
+    file 'chunk_*' into letters
+
     """
-    echo '$x world!'
+    printf '${params.str}' | split -b 6 - chunk_
     """
 }
 
+
+process convertToUpper {
+
+    input:
+    file x from letters.flatten()
+
+    output:
+    stdout result
+
+    """
+    cat $x | tr '[a-z]' '[A-Z]'
+    """
+}
+
+result.view { it.trim() }
